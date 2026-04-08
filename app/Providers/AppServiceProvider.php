@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
+use App\Services\LogSmsSender;
+use App\Services\SmsSender;
+use App\Services\TwilioSmsSender;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Twilio\Rest\Client;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +18,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(SmsSender::class, function () {
+            $sid = config('services.twilio.sid');
+            $token = config('services.twilio.token');
+            $from = config('services.twilio.from');
+
+            if (is_string($sid) && $sid !== '' && is_string($token) && $token !== '' && is_string($from) && $from !== '') {
+                return new TwilioSmsSender(new Client($sid, $token), $from);
+            }
+
+            return new LogSmsSender();
+        });
     }
 
     /**

@@ -117,4 +117,23 @@ class User extends Authenticatable
     {
         return $this->status === self::STATUS_ACTIVE;
     }
+
+    /**
+     * @return array<int, string>
+     */
+    public function routeNotificationForSms(): array
+    {
+        $numbers = [];
+        $contact = $this->studentProfile?->contact_number;
+        $guardian = $this->studentProfile?->guardian_contact_number;
+
+        foreach ([$contact, $guardian] as $n) {
+            $n = trim((string) $n);
+            if ($n !== '') {
+                $numbers[] = $n;
+            }
+        }
+
+        return array_values(array_unique($numbers));
+    }
 }

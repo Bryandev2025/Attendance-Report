@@ -17,6 +17,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::apiResource('users', \App\Http\Controllers\Api\Admin\UserController::class);
+        Route::get('users-export', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'export']);
+        Route::post('users-import', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'import']);
+
         Route::apiResource('school-years', \App\Http\Controllers\Api\Admin\SchoolYearController::class);
         Route::post('school-years/{school_year}/set-active', [\App\Http\Controllers\Api\Admin\SchoolYearController::class, 'setActive']);
         Route::apiResource('classes', \App\Http\Controllers\Api\Admin\SchoolClassController::class);
@@ -27,12 +30,20 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('absence-reports/{absence_report}', [\App\Http\Controllers\Api\Admin\AbsenceReportController::class, 'show']);
         Route::post('absence-reports/{absence_report}/approve', [\App\Http\Controllers\Api\Admin\AbsenceReportController::class, 'approve']);
         Route::post('absence-reports/{absence_report}/reject', [\App\Http\Controllers\Api\Admin\AbsenceReportController::class, 'reject']);
+        Route::get('absence-reports-export', [\App\Http\Controllers\Api\Admin\AbsenceReportExportController::class, 'export']);
+
+        Route::get('announcements', [\App\Http\Controllers\Api\Admin\AnnouncementController::class, 'index']);
+        Route::delete('announcements/{announcement}', [\App\Http\Controllers\Api\Admin\AnnouncementController::class, 'destroy']);
+
+        Route::get('announcement-comments', [\App\Http\Controllers\Api\Admin\AnnouncementCommentController::class, 'index']);
+        Route::delete('announcement-comments/{comment}', [\App\Http\Controllers\Api\Admin\AnnouncementCommentController::class, 'destroy']);
     });
 
     Route::prefix('teacher')->middleware('role:teacher')->group(function () {
         Route::get('classes', [\App\Http\Controllers\Api\Teacher\MyClassesController::class, 'index']);
         Route::post('attendance/mark', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'mark']);
         Route::get('attendance', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'index']);
+        Route::get('attendance-export', [\App\Http\Controllers\Api\Teacher\AttendanceExportController::class, 'export']);
 
         Route::post('attendance-sessions', [\App\Http\Controllers\Api\Teacher\AttendanceSessionController::class, 'store']);
         Route::post('attendance-sessions/{attendance_session}/close', [\App\Http\Controllers\Api\Teacher\AttendanceSessionController::class, 'close']);
@@ -41,6 +52,16 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('absence-reports', [\App\Http\Controllers\Api\Teacher\AbsenceReportReviewController::class, 'index']);
         Route::post('absence-reports/{absence_report}/approve', [\App\Http\Controllers\Api\Teacher\AbsenceReportReviewController::class, 'approve']);
         Route::post('absence-reports/{absence_report}/reject', [\App\Http\Controllers\Api\Teacher\AbsenceReportReviewController::class, 'reject']);
+
+        Route::get('announcements', [\App\Http\Controllers\Api\Teacher\AnnouncementController::class, 'index']);
+        Route::post('announcements', [\App\Http\Controllers\Api\Teacher\AnnouncementController::class, 'store']);
+        Route::post('announcements/{announcement}/publish', [\App\Http\Controllers\Api\Teacher\AnnouncementController::class, 'publish']);
+        Route::delete('announcements/{announcement}', [\App\Http\Controllers\Api\Teacher\AnnouncementController::class, 'destroy']);
+
+        Route::get('announcement-comments', [\App\Http\Controllers\Api\Teacher\AnnouncementCommentController::class, 'index']);
+        Route::post('announcement-comments/{comment}/hide', [\App\Http\Controllers\Api\Teacher\AnnouncementCommentController::class, 'hide']);
+        Route::post('announcement-comments/{comment}/unhide', [\App\Http\Controllers\Api\Teacher\AnnouncementCommentController::class, 'unhide']);
+        Route::delete('announcement-comments/{comment}', [\App\Http\Controllers\Api\Teacher\AnnouncementCommentController::class, 'destroy']);
     });
 
     Route::prefix('student')->middleware('role:student')->group(function () {
@@ -50,6 +71,14 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('absence-attachments/{attachment}', [\App\Http\Controllers\Api\Student\AbsenceAttachmentController::class, 'show']);
 
         Route::post('attendance-sessions/check-in', [\App\Http\Controllers\Api\Student\AttendanceSessionCheckInController::class, 'store']);
+
+        Route::get('announcements', [\App\Http\Controllers\Api\Student\AnnouncementController::class, 'index']);
+        Route::post('announcements/{announcement}/read', [\App\Http\Controllers\Api\Student\AnnouncementController::class, 'markRead']);
+
+        Route::get('announcements/{announcement}/comments', [\App\Http\Controllers\Api\Student\AnnouncementCommentController::class, 'index']);
+        Route::post('announcements/{announcement}/comments', [\App\Http\Controllers\Api\Student\AnnouncementCommentController::class, 'store']);
+        Route::put('announcement-comments/{comment}', [\App\Http\Controllers\Api\Student\AnnouncementCommentController::class, 'update']);
+        Route::delete('announcement-comments/{comment}', [\App\Http\Controllers\Api\Student\AnnouncementCommentController::class, 'destroy']);
     });
 });
 

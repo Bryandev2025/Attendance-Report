@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\AbsenceReport;
 use App\Models\SchoolClass;
+use App\Notifications\AbsenceReportReviewed;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -51,6 +52,7 @@ class AbsenceReportReviewController extends Controller
         $absenceReport->save();
 
         AuditLogger::log($request->user(), 'absence_report.approve', $absenceReport, 'Approved absence report');
+        $absenceReport->student?->notify(new AbsenceReportReviewed($absenceReport));
 
         return response()->json([
             'data' => $absenceReport->load(['student', 'attachments', 'reviewedBy']),
@@ -74,6 +76,7 @@ class AbsenceReportReviewController extends Controller
         $absenceReport->save();
 
         AuditLogger::log($request->user(), 'absence_report.reject', $absenceReport, 'Rejected absence report');
+        $absenceReport->student?->notify(new AbsenceReportReviewed($absenceReport));
 
         return response()->json([
             'data' => $absenceReport->load(['student', 'attachments', 'reviewedBy']),

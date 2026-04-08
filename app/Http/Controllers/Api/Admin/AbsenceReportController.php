@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AbsenceReport;
+use App\Notifications\AbsenceReportReviewed;
 use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -53,6 +54,7 @@ class AbsenceReportController extends Controller
         $absenceReport->save();
 
         AuditLogger::log($request->user(), 'absence_report.approve', $absenceReport, 'Approved absence report (admin)');
+        $absenceReport->student?->notify(new AbsenceReportReviewed($absenceReport));
 
         return response()->json([
             'data' => $absenceReport->load(['student', 'attachments', 'reviewedBy']),
@@ -72,6 +74,7 @@ class AbsenceReportController extends Controller
         $absenceReport->save();
 
         AuditLogger::log($request->user(), 'absence_report.reject', $absenceReport, 'Rejected absence report (admin)');
+        $absenceReport->student?->notify(new AbsenceReportReviewed($absenceReport));
 
         return response()->json([
             'data' => $absenceReport->load(['student', 'attachments', 'reviewedBy']),

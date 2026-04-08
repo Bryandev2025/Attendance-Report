@@ -128,6 +128,76 @@
           }
         }
       ]
+    },
+    {
+      "name": "Import / Export",
+      "item": [
+        {
+          "name": "Admin - Export Users (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/admin/users-export", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users-export"] }
+          }
+        },
+        {
+          "name": "Teacher - Export Attendance (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{teacherToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/teacher/attendance-export?class_id=1&from=2026-04-01&to=2026-04-30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "teacher", "attendance-export"],
+              "query": [
+                { "key": "class_id", "value": "1" },
+                { "key": "from", "value": "2026-04-01" },
+                { "key": "to", "value": "2026-04-30" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Announcements",
+      "item": [
+        {
+          "name": "Teacher - Create Announcement (draft)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{teacherToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/teacher/announcements", "host": ["{{baseUrl}}"], "path": ["api", "teacher", "announcements"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"class_id\": 1,\n  \"title\": \"Quiz\",\n  \"body\": \"Quiz tomorrow\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Teacher - Publish Announcement",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{teacherToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/teacher/announcements/1/publish", "host": ["{{baseUrl}}"], "path": ["api", "teacher", "announcements", "1", "publish"] }
+          }
+        },
+        {
+          "name": "Student - List Announcements",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/student/announcements", "host": ["{{baseUrl}}"], "path": ["api", "student", "announcements"] }
+          }
+        }
+      ]
     }
   ]
 }
