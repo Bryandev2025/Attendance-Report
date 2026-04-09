@@ -69,6 +69,60 @@ class DashboardStatsController extends Controller
             }
         }
 
+        $recentWindowStart = $end->copy()->subDays(13)->toDateString();
+        $riskRecords = AttendanceRecord::query()
+            ->with(['student', 'student.studentProfile'])
+            ->where('teacher_id', $teacherId)
+            ->whereBetween('attendance_date', [$recentWindowStart, $end->toDateString()]);
+
+        if (! empty($data['class_id'])) {
+            $riskRecords->where('class_id', (int) $data['class_id']);
+        }
+
+        $riskRows = $riskRecords
+            ->orderBy('student_id')
+            ->orderByDesc('attendance_date')
+            ->get(['student_id', 'attendance_date', 'status']);
+
+        $riskByStudent = [];
+        foreach ($riskRows as $row) {
+            $riskByStudent[$row->student_id][] = $row;
+        }
+
+        $atRisk = [];
+        foreach ($riskByStudent as $studentId => $studentRows) {
+            $recentAbsences = 0;
+            $consecutiveAbsences = 0;
+            foreach ($studentRows as $idx => $row) {
+                if ($row->status === AttendanceRecord::STATUS_ABSENT) {
+                    $recentAbsences++;
+                    if ($idx === 0 || $consecutiveAbsences > 0) {
+                        $consecutiveAbsences++;
+                    }
+                } elseif ($idx === 0) {
+                    $consecutiveAbsences = 0;
+                }
+            }
+
+            $riskScore = ($recentAbsences * 2) + ($consecutiveAbsences * 3);
+            if ($recentAbsences >= 3 || $consecutiveAbsences >= 2 || $riskScore >= 8) {
+                $student = $studentRows[0]->student;
+                $profile = $student?->studentProfile;
+                $atRisk[] = [
+                    'student_id' => (int) $studentId,
+                    'student_name' => $student?->full_name ?? 'Student',
+                    'student_number' => $profile?->student_number,
+                    'recent_absences' => $recentAbsences,
+                    'consecutive_absences' => $consecutiveAbsences,
+                    'risk_score' => $riskScore,
+                    'risk_level' => $riskScore >= 12 ? 'high' : ($riskScore >= 8 ? 'medium' : 'low'),
+                ];
+            }
+        }
+
+        usort($atRisk, fn (array $a, array $b) => $b['risk_score'] <=> $a['risk_score']);
+        $atRisk = array_slice($atRisk, 0, 10);
+
         return response()->json([
             'data' => [
                 'chart' => [
@@ -81,6 +135,7 @@ class DashboardStatsController extends Controller
                     'from' => $start->toDateString(),
                     'to' => $end->toDateString(),
                 ],
+                'at_risk_students' => $atRisk,
             ],
         ]);
     }

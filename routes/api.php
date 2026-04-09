@@ -39,7 +39,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::delete('announcement-comments/{comment}', [\App\Http\Controllers\Api\Admin\AnnouncementCommentController::class, 'destroy']);
 
         Route::get('programs', [\App\Http\Controllers\Api\Admin\ProgramController::class, 'index']);
-        Route::get('subjects', [\App\Http\Controllers\Api\Admin\SubjectController::class, 'index']);
+        Route::apiResource('subjects', \App\Http\Controllers\Api\Admin\SubjectController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('class-subject-teachers', [\App\Http\Controllers\Api\Admin\ClassSubjectTeacherController::class, 'index']);
         Route::post('class-subject-teachers', [\App\Http\Controllers\Api\Admin\ClassSubjectTeacherController::class, 'store']);
         Route::delete('class-subject-teachers/{classSubjectTeacher}', [\App\Http\Controllers\Api\Admin\ClassSubjectTeacherController::class, 'destroy']);

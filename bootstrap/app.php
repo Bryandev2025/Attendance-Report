@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
 
+        // API-only app: no web `login` route. Without this, unauthenticated requests
+        // call `route('login')` and throw 500 instead of 401 JSON.
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
