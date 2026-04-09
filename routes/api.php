@@ -44,6 +44,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::post('attendance/mark', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'mark']);
         Route::get('attendance', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'index']);
         Route::get('attendance-export', [\App\Http\Controllers\Api\Teacher\AttendanceExportController::class, 'export']);
+        Route::get('dashboard-stats', [\App\Http\Controllers\Api\Teacher\DashboardStatsController::class, 'index']);
 
         Route::post('attendance-sessions', [\App\Http\Controllers\Api\Teacher\AttendanceSessionController::class, 'store']);
         Route::post('attendance-sessions/{attendance_session}/close', [\App\Http\Controllers\Api\Teacher\AttendanceSessionController::class, 'close']);
@@ -71,6 +72,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('absence-attachments/{attachment}', [\App\Http\Controllers\Api\Student\AbsenceAttachmentController::class, 'show']);
 
         Route::post('attendance-sessions/check-in', [\App\Http\Controllers\Api\Student\AttendanceSessionCheckInController::class, 'store']);
+        Route::get('dashboard-stats', [\App\Http\Controllers\Api\Student\DashboardStatsController::class, 'index']);
 
         Route::get('announcements', [\App\Http\Controllers\Api\Student\AnnouncementController::class, 'index']);
         Route::post('announcements/{announcement}/read', [\App\Http\Controllers\Api\Student\AnnouncementController::class, 'markRead']);
