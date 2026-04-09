@@ -11,7 +11,7 @@ class SchoolClassController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SchoolClass::query()->with(['teacher.role', 'schoolYear']);
+        $query = SchoolClass::query()->with(['teacher.role', 'schoolYear', 'program']);
 
         if ($request->filled('school_year_id')) {
             $query->where('school_year_id', $request->integer('school_year_id'));
@@ -39,6 +39,8 @@ class SchoolClassController extends Controller
     {
         $data = $request->validate([
             'school_year_id' => ['required', 'integer', 'exists:school_years,id'],
+            'program_id' => ['nullable', 'integer', 'exists:programs,id'],
+            'year_level' => ['nullable', 'integer', 'min:1', 'max:8'],
             'teacher_id' => ['required', 'integer', 'exists:users,id'],
             'class_name' => ['required', 'string', 'max:255'],
             'grade_level' => ['required', 'string', 'max:255'],
@@ -54,14 +56,14 @@ class SchoolClassController extends Controller
         $class = SchoolClass::create($data);
 
         return response()->json([
-            'data' => $class->load(['teacher.role', 'schoolYear']),
+            'data' => $class->load(['teacher.role', 'schoolYear', 'program']),
         ], 201);
     }
 
     public function show(SchoolClass $class)
     {
         return response()->json([
-            'data' => $class->load(['teacher.role', 'schoolYear']),
+            'data' => $class->load(['teacher.role', 'schoolYear', 'program']),
         ]);
     }
 
@@ -69,6 +71,8 @@ class SchoolClassController extends Controller
     {
         $data = $request->validate([
             'school_year_id' => ['sometimes', 'integer', 'exists:school_years,id'],
+            'program_id' => ['nullable', 'integer', 'exists:programs,id'],
+            'year_level' => ['nullable', 'integer', 'min:1', 'max:8'],
             'teacher_id' => ['sometimes', 'integer', 'exists:users,id'],
             'class_name' => ['sometimes', 'string', 'max:255'],
             'grade_level' => ['sometimes', 'string', 'max:255'],
@@ -87,7 +91,7 @@ class SchoolClassController extends Controller
         $class->save();
 
         return response()->json([
-            'data' => $class->load(['teacher.role', 'schoolYear']),
+            'data' => $class->load(['teacher.role', 'schoolYear', 'program']),
         ]);
     }
 

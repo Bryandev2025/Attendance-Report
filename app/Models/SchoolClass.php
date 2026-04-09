@@ -15,6 +15,8 @@ class SchoolClass extends Model
 
     protected $fillable = [
         'school_year_id',
+        'program_id',
+        'year_level',
         'teacher_id',
         'class_name',
         'grade_level',
@@ -27,9 +29,24 @@ class SchoolClass extends Model
         return $this->belongsTo(SchoolYear::class);
     }
 
+    public function program(): BelongsTo
+    {
+        return $this->belongsTo(Program::class);
+    }
+
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function subjectTeachers()
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'class_id');
+    }
+
+    public function timetableSlots()
+    {
+        return $this->hasMany(TimetableSlot::class, 'class_id');
     }
 
     public function studentProfiles(): HasMany

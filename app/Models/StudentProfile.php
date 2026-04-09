@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class StudentProfile extends Model
 {
@@ -14,6 +15,7 @@ class StudentProfile extends Model
         'user_id',
         'class_id',
         'student_number',
+        'qr_public_token',
         'gender',
         'birth_date',
         'contact_number',
@@ -21,6 +23,15 @@ class StudentProfile extends Model
         'guardian_contact_number',
         'address',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (StudentProfile $profile) {
+            if (empty($profile->qr_public_token)) {
+                $profile->qr_public_token = Str::random(48);
+            }
+        });
+    }
 
     protected function casts(): array
     {

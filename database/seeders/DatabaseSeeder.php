@@ -107,5 +107,7 @@ class DatabaseSeeder extends Seeder
                 'address' => 'Home',
             ]
         );
+
+        $this->call(AcademicStructureSeeder::class);
     }
 }

@@ -37,9 +37,20 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
         Route::get('announcement-comments', [\App\Http\Controllers\Api\Admin\AnnouncementCommentController::class, 'index']);
         Route::delete('announcement-comments/{comment}', [\App\Http\Controllers\Api\Admin\AnnouncementCommentController::class, 'destroy']);
+
+        Route::get('programs', [\App\Http\Controllers\Api\Admin\ProgramController::class, 'index']);
+        Route::get('subjects', [\App\Http\Controllers\Api\Admin\SubjectController::class, 'index']);
+        Route::get('class-subject-teachers', [\App\Http\Controllers\Api\Admin\ClassSubjectTeacherController::class, 'index']);
+        Route::post('class-subject-teachers', [\App\Http\Controllers\Api\Admin\ClassSubjectTeacherController::class, 'store']);
+        Route::delete('class-subject-teachers/{classSubjectTeacher}', [\App\Http\Controllers\Api\Admin\ClassSubjectTeacherController::class, 'destroy']);
+        Route::get('timetable-slots', [\App\Http\Controllers\Api\Admin\TimetableSlotController::class, 'index']);
+        Route::post('timetable-slots', [\App\Http\Controllers\Api\Admin\TimetableSlotController::class, 'store']);
+        Route::patch('timetable-slots/{timetableSlot}', [\App\Http\Controllers\Api\Admin\TimetableSlotController::class, 'update']);
+        Route::delete('timetable-slots/{timetableSlot}', [\App\Http\Controllers\Api\Admin\TimetableSlotController::class, 'destroy']);
     });
 
     Route::prefix('teacher')->middleware('role:teacher')->group(function () {
+        Route::get('my-teaching', [\App\Http\Controllers\Api\Teacher\TeacherTeachingController::class, 'index']);
         Route::get('classes', [\App\Http\Controllers\Api\Teacher\MyClassesController::class, 'index']);
         Route::post('attendance/mark', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'mark']);
         Route::get('attendance', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'index']);
@@ -66,6 +77,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     });
 
     Route::prefix('student')->middleware('role:student')->group(function () {
+        Route::get('schedule', [\App\Http\Controllers\Api\Student\StudentScheduleController::class, 'index']);
+        Route::get('my-subjects', [\App\Http\Controllers\Api\Student\StudentSubjectsController::class, 'index']);
+        Route::get('qr-card', [\App\Http\Controllers\Api\Student\StudentQrController::class, 'show']);
         Route::get('attendance', [\App\Http\Controllers\Api\Student\MyAttendanceController::class, 'index']);
         Route::get('absence-reports', [\App\Http\Controllers\Api\Student\MyAbsenceReportsController::class, 'index']);
         Route::post('absence-reports', [\App\Http\Controllers\Api\Student\MyAbsenceReportsController::class, 'store']);

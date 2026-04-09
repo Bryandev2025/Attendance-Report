@@ -68,6 +68,16 @@ class User extends Authenticatable
         return $this->hasMany(SchoolClass::class, 'teacher_id');
     }
 
+    public function classSubjectAssignments(): HasMany
+    {
+        return $this->hasMany(ClassSubjectTeacher::class, 'teacher_id');
+    }
+
+    public function timetableSlotsTeaching(): HasMany
+    {
+        return $this->hasMany(TimetableSlot::class, 'teacher_id');
+    }
+
     public function attendanceRecordsAsStudent(): HasMany
     {
         return $this->hasMany(AttendanceRecord::class, 'student_id');

@@ -20,7 +20,12 @@ class AuthController extends Controller
 
         /** @var User|null $user */
         $user = User::query()
-            ->with(['role', 'studentProfile', 'teacherProfile'])
+            ->with([
+                'role',
+                'studentProfile.schoolClass.program',
+                'studentProfile.schoolClass.teacher',
+                'teacherProfile',
+            ])
             ->where('email', $data['email'])
             ->first();
 
@@ -51,7 +56,12 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        $user = $request->user()?->load(['role', 'studentProfile', 'teacherProfile']);
+        $user = $request->user()?->load([
+            'role',
+            'studentProfile.schoolClass.program',
+            'studentProfile.schoolClass.teacher',
+            'teacherProfile',
+        ]);
 
         return response()->json(['user' => $user]);
     }
