@@ -6,6 +6,7 @@ Route::get('/health', fn () => response()->json(['ok' => true]));
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/student-invites/accept', [\App\Http\Controllers\Api\Auth\StudentInviteAuthController::class, 'accept'])->middleware('throttle:login');
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
         Route::get('/me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
@@ -19,6 +20,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::apiResource('users', \App\Http\Controllers\Api\Admin\UserController::class);
         Route::get('users-export', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'export']);
         Route::post('users-import', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'import']);
+        Route::get('student-invites', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'index']);
+        Route::post('student-invites/bulk-create', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'bulkCreate']);
+        Route::post('student-invites/{invite}/resend', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'resend']);
 
         Route::apiResource('school-years', \App\Http\Controllers\Api\Admin\SchoolYearController::class);
         Route::post('school-years/{school_year}/set-active', [\App\Http\Controllers\Api\Admin\SchoolYearController::class, 'setActive']);
