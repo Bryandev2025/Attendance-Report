@@ -115,7 +115,7 @@ class StudentInviteController extends Controller
                         'expires_at' => now()->addHours(self::EXPIRY_HOURS),
                     ]);
 
-                    $frontUrl = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'http://127.0.0.1:5501/FE/index.html')), '/');
+                    $frontUrl = rtrim((string) config('app.frontend_url'), '/');
                     $setupUrl = $frontUrl . '#/setup-password?token=' . urlencode($plainToken);
                     try {
                         Notification::route('mail', $email)
@@ -186,7 +186,7 @@ class StudentInviteController extends Controller
             'expires_at' => now()->addHours(self::EXPIRY_HOURS),
         ]);
 
-        $frontUrl = rtrim((string) config('app.frontend_url', env('FRONTEND_URL', 'http://127.0.0.1:5501/FE/index.html')), '/');
+        $frontUrl = rtrim((string) config('app.frontend_url'), '/');
         $setupUrl = $frontUrl . '#/setup-password?token=' . urlencode($plainToken);
         try {
             Notification::route('mail', $user->email)

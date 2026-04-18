@@ -10,6 +10,10 @@
 ### Bearer token usage
 Send header: `Authorization: Bearer <token>`
 
+### Health / integration status
+- **Health**: `GET /api/health` (no auth)
+  - Returns `ok` and `integrations` (mail driver, whether mail/SMS are configured for real delivery vs log-only).
+
 ### Seeded test accounts (after `php artisan migrate:fresh --seed`)
 - Admin: `admin@example.com` / `password`
 - Teacher: `teacher@example.com` / `password`
@@ -78,6 +82,8 @@ All routes below require auth. Most are role-gated.
   - `DELETE /api/teacher/announcement-comments/{id}`
 
 ### Student (`role:student`)
+- **QR card (JSON payload)**: `GET /api/student/qr-card`
+- **QR image (PNG, Bearer auth — use fetch + blob in SPA; not for public `<img src>`)**: `GET /api/student/qr-image?size=180`
 - My attendance: `GET /api/student/attendance`
 - Absence reports:
   - list: `GET /api/student/absence-reports`

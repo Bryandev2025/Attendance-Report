@@ -7,10 +7,7 @@ use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
 use App\Models\SchoolYear;
 use App\Services\AuditLogger;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\Writer\PngWriter;
-use Endroid\QrCode\Writer\SvgWriter;
+use App\Services\QrCodeImageFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
@@ -99,24 +96,7 @@ class AttendanceSessionController extends Controller
         $format = $data['format'] ?? 'svg';
         $size = (int) ($data['size'] ?? 320);
 
-        $writer = $format === 'png' ? new PngWriter() : new SvgWriter();
-        $builder = new \Endroid\QrCode\Builder\Builder(
-            writer: $writer,
-            data: $qrPayload,
-            encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
-            size: $size,
-            margin: 8
-        );
-
-        $result = $builder->build();
-
-        $contentType = $format === 'png' ? 'image/png' : 'image/svg+xml';
-
-        return response($result->getString(), 200, [
-            'Content-Type' => $contentType,
-            'Cache-Control' => 'no-store',
-        ]);
+        return QrCodeImageFactory::svgOrPngResponse($qrPayload, $format, $size);
     }
 }
 

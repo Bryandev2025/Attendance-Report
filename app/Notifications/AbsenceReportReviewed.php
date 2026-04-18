@@ -5,10 +5,11 @@ namespace App\Notifications;
 use App\Models\AbsenceReport;
 use App\Notifications\Channels\SmsChannel;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AbsenceReportReviewed extends Notification
+class AbsenceReportReviewed extends Notification implements ShouldQueue
 {
     use Queueable;
 

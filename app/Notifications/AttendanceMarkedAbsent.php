@@ -5,10 +5,11 @@ namespace App\Notifications;
 use App\Models\AttendanceRecord;
 use App\Notifications\Channels\SmsChannel;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AttendanceMarkedAbsent extends Notification
+class AttendanceMarkedAbsent extends Notification implements ShouldQueue
 {
     use Queueable;
 

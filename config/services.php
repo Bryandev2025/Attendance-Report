@@ -37,4 +37,8 @@ return [
         'from' => env('TWILIO_FROM'),
     ],
 
+    'frontend' => [
+        'api_key' => env('FRONTEND_API_KEY'),
+    ],
+
 ];

@@ -2,27 +2,28 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', fn () => response()->json(['ok' => true]));
+Route::get('/health', \App\Http\Controllers\Api\HealthController::class);
 
-Route::prefix('auth')->group(function () {
-    Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login'])->middleware('throttle:login');
-    Route::post('/student-invites/accept', [\App\Http\Controllers\Api\Auth\StudentInviteAuthController::class, 'accept'])->middleware('throttle:login');
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
-        Route::get('/me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
+Route::middleware('x-api-key')->group(function () {
+    Route::prefix('auth')->group(function () {
+        Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login'])->middleware('throttle:login');
+        Route::post('/student-invites/accept', [\App\Http\Controllers\Api\Auth\StudentInviteAuthController::class, 'accept'])->middleware('throttle:login');
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
+            Route::get('/me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
+        });
     });
-});
 
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('role:admin');
+    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+        Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('role:admin');
 
-    Route::prefix('admin')->middleware('role:admin')->group(function () {
-        Route::apiResource('users', \App\Http\Controllers\Api\Admin\UserController::class);
-        Route::get('users-export', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'export']);
-        Route::post('users-import', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'import']);
-        Route::get('student-invites', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'index']);
-        Route::post('student-invites/bulk-create', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'bulkCreate']);
-        Route::post('student-invites/{invite}/resend', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'resend']);
+        Route::prefix('admin')->middleware('role:admin')->group(function () {
+            Route::apiResource('users', \App\Http\Controllers\Api\Admin\UserController::class);
+            Route::get('users-export', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'export']);
+            Route::post('users-import', [\App\Http\Controllers\Api\Admin\UserImportExportController::class, 'import']);
+            Route::get('student-invites', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'index']);
+            Route::post('student-invites/bulk-create', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'bulkCreate']);
+            Route::post('student-invites/{invite}/resend', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'resend']);
 
         Route::apiResource('school-years', \App\Http\Controllers\Api\Admin\SchoolYearController::class);
         Route::post('school-years/{school_year}/set-active', [\App\Http\Controllers\Api\Admin\SchoolYearController::class, 'setActive']);
@@ -51,11 +52,12 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::post('timetable-slots', [\App\Http\Controllers\Api\Admin\TimetableSlotController::class, 'store']);
         Route::patch('timetable-slots/{timetableSlot}', [\App\Http\Controllers\Api\Admin\TimetableSlotController::class, 'update']);
         Route::delete('timetable-slots/{timetableSlot}', [\App\Http\Controllers\Api\Admin\TimetableSlotController::class, 'destroy']);
-    });
+        });
 
-    Route::prefix('teacher')->middleware('role:teacher')->group(function () {
+        Route::prefix('teacher')->middleware('role:teacher')->group(function () {
         Route::get('my-teaching', [\App\Http\Controllers\Api\Teacher\TeacherTeachingController::class, 'index']);
         Route::get('classes', [\App\Http\Controllers\Api\Teacher\MyClassesController::class, 'index']);
+        Route::get('classes/{class}/roster', [\App\Http\Controllers\Api\Teacher\ClassRosterController::class, 'index']);
         Route::post('attendance/mark', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'mark']);
         Route::get('attendance', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'index']);
         Route::get('attendance-export', [\App\Http\Controllers\Api\Teacher\AttendanceExportController::class, 'export']);
@@ -78,12 +80,13 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::post('announcement-comments/{comment}/hide', [\App\Http\Controllers\Api\Teacher\AnnouncementCommentController::class, 'hide']);
         Route::post('announcement-comments/{comment}/unhide', [\App\Http\Controllers\Api\Teacher\AnnouncementCommentController::class, 'unhide']);
         Route::delete('announcement-comments/{comment}', [\App\Http\Controllers\Api\Teacher\AnnouncementCommentController::class, 'destroy']);
-    });
+        });
 
-    Route::prefix('student')->middleware('role:student')->group(function () {
+        Route::prefix('student')->middleware('role:student')->group(function () {
         Route::get('schedule', [\App\Http\Controllers\Api\Student\StudentScheduleController::class, 'index']);
         Route::get('my-subjects', [\App\Http\Controllers\Api\Student\StudentSubjectsController::class, 'index']);
         Route::get('qr-card', [\App\Http\Controllers\Api\Student\StudentQrController::class, 'show']);
+        Route::get('qr-image', [\App\Http\Controllers\Api\Student\StudentQrController::class, 'qrImage']);
         Route::get('attendance', [\App\Http\Controllers\Api\Student\MyAttendanceController::class, 'index']);
         Route::get('absence-reports', [\App\Http\Controllers\Api\Student\MyAbsenceReportsController::class, 'index']);
         Route::post('absence-reports', [\App\Http\Controllers\Api\Student\MyAbsenceReportsController::class, 'store']);
@@ -99,6 +102,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::post('announcements/{announcement}/comments', [\App\Http\Controllers\Api\Student\AnnouncementCommentController::class, 'store']);
         Route::put('announcement-comments/{comment}', [\App\Http\Controllers\Api\Student\AnnouncementCommentController::class, 'update']);
         Route::delete('announcement-comments/{comment}', [\App\Http\Controllers\Api\Student\AnnouncementCommentController::class, 'destroy']);
+        });
     });
 });
 

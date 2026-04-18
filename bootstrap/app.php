@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+            'x-api-key' => \App\Http\Middleware\EnsureApiKeyHeader::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
