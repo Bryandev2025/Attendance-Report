@@ -18,6 +18,26 @@ class StudentInviteController extends Controller
 {
     private const EXPIRY_HOURS = 48;
 
+    private function buildPasswordSetupUrl(string $plainToken): string
+    {
+        $frontUrl = trim((string) config('app.frontend_url'));
+        $frontUrl = $frontUrl === '' ? '' : rtrim($frontUrl, '/');
+
+        // Only enforce "public URL" constraint in production.
+        if (app()->environment('production')) {
+            if (preg_match('/^(https?:\\/\\/)?(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/|$)/i', $frontUrl)) {
+                $frontUrl = '';
+            }
+        }
+
+        if ($frontUrl === '') {
+            $frontUrl = rtrim((string) config('app.url'), '/');
+        }
+
+        // Frontend uses hash routing.
+        return $frontUrl . '/#/setup-password?token=' . urlencode($plainToken);
+    }
+
     public function index(Request $request)
     {
         $status = trim((string) $request->query('status', ''));
@@ -115,8 +135,7 @@ class StudentInviteController extends Controller
                         'expires_at' => now()->addHours(self::EXPIRY_HOURS),
                     ]);
 
-                    $frontUrl = rtrim((string) config('app.frontend_url'), '/');
-                    $setupUrl = $frontUrl . '#/setup-password?token=' . urlencode($plainToken);
+                    $setupUrl = $this->buildPasswordSetupUrl($plainToken);
                     try {
                         Notification::route('mail', $email)
                             ->notify(new StudentPasswordSetupInviteNotification(
@@ -164,6 +183,37 @@ class StudentInviteController extends Controller
             return response()->json(['message' => 'Invite user not found.'], 404);
         }
 
+        if (! in_array($user->role?->name, ['student', 'teacher'], true)) {
+            return response()->json(['message' => 'Invite is only available for teacher or student accounts.'], 422);
+        }
+
+        $newInvite = $this->createAndSendInvite($user, $request->user()?->id);
+
+        AuditLogger::log($request->user(), 'users.invite_resend', $user, "Resent password setup invite for {$user->email}");
+
+        return response()->json([
+            'data' => $newInvite->load('user:id,first_name,last_name,email,status'),
+        ]);
+    }
+
+    public function resendForUser(Request $request, User $user)
+    {
+        if (! in_array($user->role?->name, ['student', 'teacher'], true)) {
+            return response()->json(['message' => 'Password setup invite is only available for teacher or student accounts.'], 422);
+        }
+
+        $newInvite = $this->createAndSendInvite($user, $request->user()?->id);
+
+        AuditLogger::log($request->user(), 'users.invite_resend', $user, "Resent password setup invite for {$user->email}");
+
+        return response()->json([
+            'data' => $newInvite->load('user:id,first_name,last_name,email,status'),
+        ]);
+    }
+
+    private function createAndSendInvite(User $user, ?int $createdBy): StudentPasswordSetupInvite
+    {
+
         StudentPasswordSetupInvite::query()
             ->where('user_id', $user->id)
             ->whereIn('status', [
@@ -179,15 +229,14 @@ class StudentInviteController extends Controller
         $plainToken = Str::random(64);
         $newInvite = StudentPasswordSetupInvite::query()->create([
             'user_id' => $user->id,
-            'created_by' => $request->user()?->id,
+            'created_by' => $createdBy,
             'email' => $user->email,
             'token_hash' => hash('sha256', $plainToken),
             'status' => StudentPasswordSetupInvite::STATUS_PENDING,
             'expires_at' => now()->addHours(self::EXPIRY_HOURS),
         ]);
 
-        $frontUrl = rtrim((string) config('app.frontend_url'), '/');
-        $setupUrl = $frontUrl . '#/setup-password?token=' . urlencode($plainToken);
+        $setupUrl = $this->buildPasswordSetupUrl($plainToken);
         try {
             Notification::route('mail', $user->email)
                 ->notify(new StudentPasswordSetupInviteNotification(
@@ -204,12 +253,7 @@ class StudentInviteController extends Controller
             $newInvite->last_error = $mailError->getMessage();
             $newInvite->save();
         }
-
-        AuditLogger::log($request->user(), 'students.invite_resend', $user, "Resent student invite for {$user->email}");
-
-        return response()->json([
-            'data' => $newInvite->load('user:id,first_name,last_name,email,status'),
-        ]);
+        return $newInvite;
     }
 }
 

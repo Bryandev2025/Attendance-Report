@@ -24,6 +24,7 @@ Route::middleware('x-api-key')->group(function () {
             Route::get('student-invites', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'index']);
             Route::post('student-invites/bulk-create', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'bulkCreate']);
             Route::post('student-invites/{invite}/resend', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'resend']);
+            Route::post('users/{user}/resend-password-setup', [\App\Http\Controllers\Api\Admin\StudentInviteController::class, 'resendForUser']);
 
         Route::apiResource('school-years', \App\Http\Controllers\Api\Admin\SchoolYearController::class);
         Route::post('school-years/{school_year}/set-active', [\App\Http\Controllers\Api\Admin\SchoolYearController::class, 'setActive']);
@@ -62,6 +63,8 @@ Route::middleware('x-api-key')->group(function () {
         Route::get('attendance', [\App\Http\Controllers\Api\Teacher\AttendanceController::class, 'index']);
         Route::get('attendance-export', [\App\Http\Controllers\Api\Teacher\AttendanceExportController::class, 'export']);
         Route::get('dashboard-stats', [\App\Http\Controllers\Api\Teacher\DashboardStatsController::class, 'index']);
+        Route::get('qr-card', [\App\Http\Controllers\Api\Teacher\TeacherQrController::class, 'show']);
+        Route::get('qr-image', [\App\Http\Controllers\Api\Teacher\TeacherQrController::class, 'qrImage']);
 
         Route::post('attendance-sessions', [\App\Http\Controllers\Api\Teacher\AttendanceSessionController::class, 'store']);
         Route::post('attendance-sessions/{attendance_session}/close', [\App\Http\Controllers\Api\Teacher\AttendanceSessionController::class, 'close']);

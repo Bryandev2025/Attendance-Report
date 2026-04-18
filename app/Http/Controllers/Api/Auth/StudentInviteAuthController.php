@@ -45,7 +45,7 @@ class StudentInviteAuthController extends Controller
         }
 
         $user = $invite->user;
-        if (! $user || ! $user->isStudent()) {
+        if (! $user || ! in_array($user->role?->name, ['student', 'teacher'], true)) {
             throw ValidationException::withMessages([
                 'token' => ['Invite user is invalid.'],
             ]);
