@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,21 +14,42 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['nullable', 'email'],
+            'login' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $credential = trim((string) ($data['email'] ?? $data['login'] ?? ''));
+
+        if ($credential === '') {
+            throw ValidationException::withMessages([
+                'email' => ['Email or login is required.'],
+            ]);
+        }
+
+        $with = [
+            'role',
+            'studentProfile.schoolClass.program',
+            'studentProfile.schoolClass.teacher',
+            'teacherProfile',
+        ];
+
         /** @var User|null $user */
         $user = User::query()
-            ->with([
-                'role',
-                'studentProfile.schoolClass.program',
-                'studentProfile.schoolClass.teacher',
-                'teacherProfile',
-            ])
-            ->where('email', $data['email'])
+            ->with($with)
+            ->where('email', $credential)
             ->first();
+
+        if (! $user && ! str_contains($credential, '@')) {
+            $profile = StudentProfile::query()->where('student_number', $credential)->first();
+            if ($profile) {
+                $user = User::query()
+                    ->with($with)
+                    ->whereKey($profile->user_id)
+                    ->first();
+            }
+        }
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
