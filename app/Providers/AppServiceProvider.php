@@ -8,6 +8,7 @@ use App\Services\TwilioSmsSender;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Twilio\Rest\Client;
 
@@ -27,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
                 return new TwilioSmsSender(new Client($sid, $token), $from);
             }
 
-            return new LogSmsSender();
+            return new LogSmsSender;
         });
     }
 
@@ -36,14 +37,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('api', function (Request $request) {
+        if (str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
+        $perMinute = max(1, min(1000, (int) env('API_RATE_LIMIT_PER_MINUTE', 120)));
+        RateLimiter::for('api', function (Request $request) use ($perMinute) {
             $key = optional($request->user())->getAuthIdentifier() ?: $request->ip();
-            return Limit::perMinute(120)->by($key);
+
+            return Limit::perMinute($perMinute)->by($key);
         });
 
-        RateLimiter::for('login', function (Request $request) {
+        $loginLimit = max(1, min(60, (int) env('LOGIN_RATE_LIMIT_PER_MINUTE', 10)));
+        RateLimiter::for('login', function (Request $request) use ($loginLimit) {
             $email = (string) $request->input('email', '');
-            return Limit::perMinute(10)->by(strtolower($email) . '|' . $request->ip());
+            $login = (string) $request->input('login', '');
+
+            return Limit::perMinute($loginLimit)->by(strtolower($email !== '' ? $email : $login).'|'.$request->ip());
         });
     }
 }

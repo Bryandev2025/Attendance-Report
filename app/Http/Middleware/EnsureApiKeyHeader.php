@@ -12,7 +12,13 @@ class EnsureApiKeyHeader
     {
         $expected = (string) config('services.frontend.api_key', '');
 
-        // Allow requests when no key is configured.
+        if (app()->isProduction() && $expected === '') {
+            return response()->json([
+                'message' => 'Server misconfiguration: set FRONTEND_API_KEY in production.',
+            ], 503);
+        }
+
+        // Local / staging: allow requests when no key is configured.
         if ($expected === '') {
             return $next($request);
         }

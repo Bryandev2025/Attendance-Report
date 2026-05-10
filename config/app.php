@@ -125,4 +125,19 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Public health endpoint details
+    |--------------------------------------------------------------------------
+    |
+    | When false, GET /api/health returns only { "ok": true }. Set
+    | HEALTH_SHOW_INTEGRATIONS=true to expose mail/SMS hints (e.g. internal ops).
+    |
+    */
+
+    'health_show_integration_hints' => filter_var(
+        env('HEALTH_SHOW_INTEGRATIONS', env('APP_ENV', 'production') === 'production' ? 'false' : 'true'),
+        FILTER_VALIDATE_BOOLEAN
+    ),
+
 ];

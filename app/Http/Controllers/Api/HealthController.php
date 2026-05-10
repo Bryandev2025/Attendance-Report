@@ -16,6 +16,14 @@ class HealthController extends Controller
      */
     public function __invoke(): JsonResponse
     {
+        $showDetails = (bool) config('app.health_show_integration_hints', true);
+
+        if (! $showDetails) {
+            return response()->json([
+                'ok' => true,
+            ]);
+        }
+
         $mailDriver = (string) config('mail.default', 'log');
         $smsSender = app(SmsSender::class);
         $smsMode = $smsSender instanceof TwilioSmsSender ? 'twilio' : 'log';

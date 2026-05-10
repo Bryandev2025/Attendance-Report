@@ -1,8 +1,18 @@
 <?php
 
+use App\Http\Middleware\AddApiSecurityHeaders;
+use App\Http\Middleware\EnsureApiKeyHeader;
+use App\Http\Middleware\EnsureUserHasRole;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,50 +22,71 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+        $trusted = env('TRUSTED_PROXIES');
+        if ($trusted === '*') {
+            $middleware->trustProxies(at: '*');
+        } elseif (is_string($trusted) && $trusted !== '') {
+            $middleware->trustProxies(at: array_values(array_filter(array_map('trim', explode(',', $trusted)))));
+        }
+
+        $middleware->append(HandleCors::class);
+
+        $middleware->api(append: [
+            AddApiSecurityHeaders::class,
+        ]);
 
         // API-only app: no web `login` route. Without this, unauthenticated requests
         // call `route('login')` and throw 500 instead of 401 JSON.
         $middleware->redirectGuestsTo(fn () => null);
 
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
-            'x-api-key' => \App\Http\Middleware\EnsureApiKeyHeader::class,
+            'role' => EnsureUserHasRole::class,
+            'x-api-key' => EnsureApiKeyHeader::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
             }
 
-            $status = 500;
-            $payload = ['message' => 'Server error.'];
-
-            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
-                $status = $e->getStatusCode();
-                $payload['message'] = $e->getMessage() ?: $payload['message'];
-            }
-
-            if ($e instanceof \Illuminate\Auth\AuthenticationException) {
-                $status = 401;
-                $payload['message'] = 'Unauthenticated.';
-            }
-
-            if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
-                $status = 403;
-                $payload['message'] = 'Forbidden.';
-            }
-
-            if ($e instanceof \Illuminate\Validation\ValidationException) {
+            if ($e instanceof ValidationException) {
                 return response()->json([
                     'message' => $e->getMessage(),
                     'errors' => $e->errors(),
                 ], 422);
             }
 
+            if ($e instanceof QueryException && ! config('app.debug')) {
+                return response()->json(['message' => 'Server error.'], 500);
+            }
+
+            $status = 500;
+            $payload = ['message' => 'Server error.'];
+
+            if ($e instanceof HttpExceptionInterface) {
+                $status = $e->getStatusCode();
+                $payload['message'] = $e->getMessage() ?: $payload['message'];
+            }
+
+            if ($e instanceof AuthenticationException) {
+                $status = 401;
+                $payload['message'] = 'Unauthenticated.';
+            }
+
+            if ($e instanceof AuthorizationException) {
+                $status = 403;
+                $payload['message'] = 'Forbidden.';
+            }
+
+            if (! config('app.debug') && $status >= 500) {
+                $payload['message'] = 'Server error.';
+            }
+
             if (config('app.debug')) {
-                $payload['exception'] = get_class($e);
+                $payload['exception'] = $e::class;
+                $payload['file'] = $e->getFile();
+                $payload['line'] = $e->getLine();
             }
 
             return response()->json($payload, $status);

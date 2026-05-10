@@ -34,7 +34,7 @@ See `../CONFIGURATION.md` for full details. Most important:
 - `FRONTEND_URL` (used in student invite links)
 - `CORS_ALLOWED_ORIGINS`
 - `QUEUE_CONNECTION=database`
-- `FRONTEND_API_KEY` (optional extra request gate; not a browser-secret)
+- `FRONTEND_API_KEY` (required when `APP_ENV=production`; send as `X-API-Key` from the frontend)
 - `TWILIO_*` for real SMS
 - `MAIL_*` for real email
 
@@ -60,11 +60,6 @@ php artisan test
 - Optional API key gate: set `FRONTEND_API_KEY` and send matching `X-API-Key`
 - Auth flow: `POST /api/auth/login` then `Authorization: Bearer <token>`
 
-## Deployment checklist
+## Production
 
-1. Set production `.env` values (`APP_ENV=production`, `APP_DEBUG=false`)
-2. Restrict `CORS_ALLOWED_ORIGINS`
-3. Configure mail/SMS providers
-4. Run migrations
-5. Start queue worker(s)
-6. Verify `GET /api/health`
+See the repo root **`DEPLOY.md`** for environment variables, HTTPS/proxy settings, `composer run production:optimize`, and queue workers.
